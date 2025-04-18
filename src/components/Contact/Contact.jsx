@@ -1,31 +1,59 @@
-import css from './Contact.module.css';
-import { FaUser } from 'react-icons/fa';
-import { BsFillTelephoneFill } from 'react-icons/bs';
-import { useDispatch } from 'react-redux';
-import { deleteContact } from '../../redux/contacts/operations.js';
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { FaUser, FaPhoneAlt } from "react-icons/fa";
+import { deleteContact } from "../../redux/contacts/operations";
+import Modal from "../ModalDelete/ModalDelete";
+import toast from "react-hot-toast";
+import css from "./Contact.module.css";
 
-export default function Contact({ data: { name, number, id } }) {
+export default function Contact({ contact }) {
   const dispatch = useDispatch();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handeleDelete = () => {
-    dispatch(deleteContact(id));
+  const handleDelete = () => {
+    setIsModalOpen(true);
   };
+
+  const confirmDelete = () => {
+    dispatch(deleteContact(contact.id))
+      .unwrap()
+      .then(() => {
+        toast.success(`Contact "${contact.name}" deleted successfully!`);
+      })
+      .catch(() => {
+        toast.error("Failed to delete contact. Please try again.");
+      })
+      .finally(() => {
+        setIsModalOpen(false);
+      });
+  };
+
+  const cancelDelete = () => {
+    setIsModalOpen(false);
+  };
+
   return (
-    <div className={css.container}>
-      <div>
-        <div className={css.wrapper}>
-          <FaUser className={css.icon} />
-          <p className={css.text}>{name}</p>
-        </div>
-        <div className={css.wrapper}>
-          <BsFillTelephoneFill className={css.icon} />
-          <p className={css.text}>{number}</p>
-        </div>
+    <div className={css.contact}>
+      <div className={css.wrapper}>
+        <p className={css.name}>
+          <FaUser />
+          {contact.name}
+        </p>
+        <p className={css.number}>
+          <FaPhoneAlt />
+          {contact.number}
+        </p>
       </div>
-      {/* <button className={css.button} type="button" onClick={() => onDelete(id)}> */}
-      <button className={css.button} type="button" onClick={handeleDelete}>
+      <button className={css.btn} onClick={handleDelete}>
         Delete
       </button>
+      {isModalOpen && (
+        <Modal
+          message={`Are you sure you want to delete ${contact.name}?`}
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+        />
+      )}
     </div>
   );
 }

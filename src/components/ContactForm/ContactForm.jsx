@@ -1,75 +1,74 @@
-import { useId } from 'react';
-import { nanoid } from 'nanoid';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
+import { useDispatch } from "react-redux";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { addContact } from "../../redux/contacts/operations";
+import toast from "react-hot-toast";
+import css from "./ContactForm.module.css";
 
-import css from './ContactForm.module.css';
-import { useDispatch } from 'react-redux';
-// import { addContact } from '../../redux/contactsSlice.js';
-import { addContact } from '../../redux/contacts/operations.js';
-
-const UserSchema = Yup.object().shape({
+const ContactSchema = Yup.object().shape({
   name: Yup.string()
-    .min(3, 'Must be at least 3 characters')
-    .max(50, 'Must be 50 characters or less')
-    .required('Name is required'),
+    .min(3, "Too short!")
+    .max(50, "Too Long!")
+    .required("Required"),
   number: Yup.string()
-    .min(3, 'Must be at least 3 characters')
-    .max(50, 'Must be 50 characters or less')
-    .required('Number is required'),
+    .min(3, "Too short!")
+    .max(50, "Too Long!")
+    .required("Required"),
 });
 
 export default function ContactForm() {
   const dispatch = useDispatch();
 
-  const handeleSubmit = (values, actions) => {
-    const newContact = {
-      id: nanoid(),
-      name: values.name,
-      number: values.number,
-    };
-    console.log('Dispatching action:', newContact);
-
-    dispatch(addContact(newContact));
-    // onAdd(newContact);
-    actions.resetForm();
+  const handleSubmit = (values, actions) => {
+    dispatch(addContact(values))
+      .unwrap()
+      .then(() => {
+        toast.success("Contact added successfully!");
+        actions.resetForm();
+      })
+      .catch(() => {
+        toast.error("Failed to add contact. Please try again.");
+      });
   };
-
-  const filedId = useId();
 
   return (
     <Formik
       initialValues={{
-        name: '',
-        number: '',
+        name: "",
+        number: "",
       }}
-      validationSchema={UserSchema}
-      onSubmit={handeleSubmit}
+      validationSchema={ContactSchema}
+      onSubmit={handleSubmit}
     >
       <Form className={css.form}>
-        <label className={css.textLabel} htmlFor={`${filedId}-name`}>
-          Name
-        </label>
-        <Field
-          className={css.input}
-          placeholder="Your name"
-          type="text"
-          name="name"
-          id={`${filedId}-name`}
-        />
-        <ErrorMessage className={css.error} name="name" component={'span'} />
-        <label className={css.textLabel} htmlFor={`${filedId}-number`}>
-          Number
-        </label>
-        <Field
-          className={css.input}
-          placeholder="Your number"
-          type="tel"
-          name="number"
-          id={`${filedId}-number`}
-        />
-        <ErrorMessage className={css.error} name="number" component={'span'} />
-        <button className={css.button} type="submit">
+        <div className={css.group}>
+          <label className={css.label} htmlFor="name">
+            Name
+          </label>
+          <Field
+            className={css.input}
+            type="text"
+            name="name"
+            id="name"
+            autoComplete="name"
+          />
+          <ErrorMessage name="name" component="span" className={css.error} />
+        </div>
+
+        <div className={css.group}>
+          <label className={css.label} htmlFor="number">
+            Number
+          </label>
+          <Field
+            className={css.input}
+            type="tel"
+            name="number"
+            id="number"
+            autoComplete="tel"
+          />
+          <ErrorMessage name="number" component="span" className={css.error} />
+        </div>
+        <button type="submit" className={css.btn}>
           Add contact
         </button>
       </Form>
